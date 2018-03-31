@@ -2,17 +2,24 @@ import requests
 import pandas as pd
 from progressbar import ProgressBar
 
+
+# execute api request
+def execute_api_request(url, params):
+    request_url = domain_url + url
+    return requests.get(request_url, params=params)
+
+
 # before id
 before_id = 0
 # bit data size
 count = 500
 # loop counter
-loopCount = 0
+loop_count = 0
 # loop size
-countLimit = 20
+count_limit = 20
 # request url
-domainUrl = "https://api.bitflyer.jp"
-executionHistoryUrl = '/v1/getexecutions'
+domain_url = "https://api.bitflyer.jp"
+execution_history_url = '/v1/getexecutions'
 # column array
 keys = ["id",
         "side",
@@ -22,16 +29,18 @@ keys = ["id",
         "buy_child_order_acceptance_id",
         "sell_child_order_acceptance_id"]
 
-p = ProgressBar(loopCount, countLimit)
+# params
+execution_history_params = {'count': count,
+                            'before': before_id}
+# init ProgressBar
+p = ProgressBar(loop_count, count_limit)
 
 # init DataFrame
 df = pd.DataFrame(columns=keys)
 
-while loopCount < countLimit:
+while loop_count < count_limit:
     # request execution history
-    requestUrl = domainUrl + executionHistoryUrl
-    response = requests.get(requestUrl, params={'count': count,
-                                                'before': before_id})
+    response = execute_api_request(execution_history_url, execution_history_params)
     for index, bitData in enumerate(response.json()):
         for key in keys:
             print(end='')
@@ -39,11 +48,11 @@ while loopCount < countLimit:
             before_id = bitData["id"]
 
     # show execution progress
-    p.update(loopCount)
+    p.update(loop_count)
 
     tmpDf = pd.read_json(response.text)
     df = pd.concat([df, tmpDf])
 
-    loopCount += 1
+    loop_count += 1
 
 df.to_csv("bit_data.csv", index=False)
