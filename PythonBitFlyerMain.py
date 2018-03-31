@@ -7,9 +7,17 @@ def show_degree_of_progress():
     print(("■" * loopCount) + ("□" * (countLimit - loopCount - 1)))
 
 
+# before id
+before_id = 0
+# bit data size
+count = 500
+# loop counter
+loopCount = 0
+# loop size
+countLimit = 20
 # request url
-url = 'https://api.bitflyer.jp/v1/getexecutions'
-
+domainUrl = "https://api.bitflyer.jp"
+executionHistoryUrl = '/v1/getexecutions'
 # column array
 keys = ["id",
         "side",
@@ -19,21 +27,14 @@ keys = ["id",
         "buy_child_order_acceptance_id",
         "sell_child_order_acceptance_id"]
 
-# before id
-before_id = 0
-# bit data size
-count = 500
-# loop counter
-loopCount = 0
-# loop size
-countLimit = 20
-
 # init DataFrame
 df = pd.DataFrame(columns=keys)
 
 while loopCount < countLimit:
-    response = requests.get(url, params={'count': count,
-                                         'before': before_id})
+    # request execution history
+    requestUrl = domainUrl + executionHistoryUrl
+    response = requests.get(requestUrl, params={'count': count,
+                                                'before': before_id})
     for index, bitData in enumerate(response.json()):
         for key in keys:
             print(end='')
