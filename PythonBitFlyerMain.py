@@ -1,11 +1,6 @@
 import requests
 import pandas as pd
-
-
-def show_degree_of_progress():
-    print(str(loopCount + 1) + " / " + str(countLimit))
-    print(("■" * loopCount) + ("□" * (countLimit - loopCount - 1)))
-
+from progressbar import ProgressBar
 
 # before id
 before_id = 0
@@ -27,6 +22,8 @@ keys = ["id",
         "buy_child_order_acceptance_id",
         "sell_child_order_acceptance_id"]
 
+p = ProgressBar(loopCount, countLimit)
+
 # init DataFrame
 df = pd.DataFrame(columns=keys)
 
@@ -41,7 +38,8 @@ while loopCount < countLimit:
         else:
             before_id = bitData["id"]
 
-    show_degree_of_progress()
+    # show execution progress
+    p.update(loopCount)
 
     tmpDf = pd.read_json(response.text)
     df = pd.concat([df, tmpDf])
