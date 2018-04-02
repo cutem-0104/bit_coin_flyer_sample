@@ -9,26 +9,26 @@ from progressbar import ProgressBar
 
 class PythonBitFlyerApp(object):
 
-    def __init__(self):
+    def __init__(self, count=500, count_limit=20):
         # before id
         self.before_id = 0
         # bit data size
-        self.count = 500
+        self.count = count
         # loop size
-        self.count_limit = 20
+        self.count_limit = count_limit
         # request url
-        self.domain_url = "https://api.bitflyer.jp"
+        self.domain_url = 'https://api.bitflyer.jp'
         self.execution_history_url = '/v1/getexecutions'
         self.output_dir = './data/'
         self.output_file_name = 'bit_data.csv'
         # column array
-        self.keys = ["id",
-                "side",
-                "price",
-                "size",
-                "exec_date",
-                "buy_child_order_acceptance_id",
-                "sell_child_order_acceptance_id"]
+        self.keys = ['id',
+                     'side',
+                     'price',
+                     'size',
+                     'exec_date',
+                     'buy_child_order_acceptance_id',
+                     'sell_child_order_acceptance_id']
 
     def run(self):
         # params
