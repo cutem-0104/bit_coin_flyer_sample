@@ -44,11 +44,18 @@ class PythonBitFlyerApp(object):
         for progress_num in range(self.count_limit):
             # request execution history
             response = self.execute_api_request(self.execution_history_url, execution_history_params)
-            for index, bitData in enumerate(response.json()):
-                for key in self.keys:
-                    print(end='')
-                else:
-                    before_id = bitData["id"]
+            btc_list = response.json()
+
+            # get latest id and last id
+            latest_id = btc_list[0]['id']
+            last_id = btc_list[-1]['id']
+
+            # update parameters with last id
+            execution_history_params['before'] = last_id
+
+            # TODO use logger
+            print('latest id: {}'.format(latest_id))
+            print('last_id: {}'.format(last_id))
 
             # show execution progress
             p.update(progress_num)
