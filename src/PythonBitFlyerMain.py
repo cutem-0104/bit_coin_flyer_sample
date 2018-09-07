@@ -5,6 +5,8 @@ import os
 import requests
 import pandas as pd
 from progressbar import ProgressBar
+from datetime import datetime as dt
+import datetime
 
 
 class PythonBitFlyerApp(object):
@@ -30,10 +32,20 @@ class PythonBitFlyerApp(object):
                      'buy_child_order_acceptance_id',
                      'sell_child_order_acceptance_id']
 
-    def run(self):
-        # params
-        execution_history_params = {'count': self.count,
+        self.first_time_flag = True
+
+        self.execution_history_params = {'count': self.count,
                                     'before': self.before_id}
+
+    def run(self):
+
+        arg_date = dt.strptime('2018-04-05 12:00:56', '%Y-%m-%d %H:%M:%S')
+        arg_date = arg_date.replace(second=0)
+
+        while True:
+            start_id = self.search_start_id(arg_date)
+            self.execution_history_params['before'] = start_id
+
 
         # init ProgressBar
         p = ProgressBar(0, self.count_limit)
@@ -43,19 +55,13 @@ class PythonBitFlyerApp(object):
 
         for progress_num in range(self.count_limit):
             # request execution history
-            response = self.execute_api_request(self.execution_history_url, execution_history_params)
+            response = self.execute_api_request(self.execution_history_url, self.execution_history_params)
             btc_list = response.json()
 
-            # get latest id and last id
-            latest_id = btc_list[0]['id']
             last_id = btc_list[-1]['id']
 
             # update parameters with last id
-            execution_history_params['before'] = last_id
-
-            # TODO use logger
-            print('latest id: {}'.format(latest_id))
-            print('last_id: {}'.format(last_id))
+            self.execution_history_params['before'] = last_id
 
             # show execution progress
             p.update(progress_num)
@@ -74,6 +80,40 @@ class PythonBitFlyerApp(object):
         output_path = os.path.join(self.output_dir, self.output_file_name)
         result_df.to_csv(output_path, index=False)
         print('save on {}'.format(output_path))
+
+    def search_start_id(self, arg_date):
+        # request execution history
+        response = self.execute_api_request(self.execution_history_url, self.execution_history_params)
+
+        search_btc_df = pd.read_json(response.text)
+
+
+        str_date = search_btc_df['exec_date'].iloc[0]
+        tmp_date = str_date.replace('T', ' ')
+        tmp_date = tmp_date.split('.')[0]
+        date = dt.strptime(tmp_date, '%Y-%m-%d %H:%M:%S')
+        date = date.replace(second=0)
+
+        # Adjust ISO format to Japan time
+        date = date + datetime.timedelta(hours=9)
+
+        if date < arg_date:
+            # 引数のdateは今取得したbtcデータよりも未来にある
+            # 初回は本当に未来のdateを指定されているのでエラー
+            # ２回目以降は過去に戻りすぎなのでidを増やす
+            if self.first_time_flag:
+                return 'miss'
+            else:
+                start_id = int(search_btc_df['id'][499]) + 5000
+                self.first_time_flag = False
+                return start_id
+        elif date > arg_date:
+            # 引数のdateは今取得したbtcデータよりも過去にある
+            start_id = int(search_btc_df['id'][499]) - 5000
+            return start_id
+        else:
+            print('stop')
+            pass
 
 
 if __name__ == '__main__':
